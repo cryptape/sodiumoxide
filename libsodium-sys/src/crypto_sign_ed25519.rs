@@ -14,6 +14,9 @@ extern {
         pk: *mut [u8; crypto_sign_ed25519_PUBLICKEYBYTES],
         sk: *mut [u8; crypto_sign_ed25519_SECRETKEYBYTES],
         seed: *const [u8; crypto_sign_ed25519_SEEDBYTES]) -> c_int;
+    pub fn crypto_sign_ed25519_sk_to_pk(
+        pk: *mut [u8; crypto_sign_ed25519_PUBLICKEYBYTES],
+        sk: *const [u8; crypto_sign_ed25519_SECRETKEYBYTES]) -> c_int;
     pub fn crypto_sign_ed25519(
         sm: *mut u8,
         smlen: *mut c_ulonglong,

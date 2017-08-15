@@ -76,6 +76,20 @@ pub fn keypair_from_seed(&Seed(ref seed): &Seed) -> (PublicKey, SecretKey) {
     }
 }
 
+/// `keypair_from_privkey()` gen key pair from `privkey`
+pub fn keypair_from_privkey(privkey: &[u8]) -> Option<(PublicKey, SecretKey)> {
+    if privkey.len() != SECRETKEYBYTES {
+        return None;
+    }
+
+    unsafe {
+        let mut pk = [0u8; PUBLICKEYBYTES];
+        let sk = SecretKey::from_slice(privkey).unwrap();
+        ffi::crypto_sign_ed25519_sk_to_pk(&mut pk, &sk.0);
+        Some((PublicKey(pk), sk))
+    }
+}
+
 /// `sign()` signs a message `m` using the signer's secret key `sk`.
 /// `sign()` returns the resulting signed message `sm`.
 pub fn sign(m: &[u8],
@@ -148,6 +162,20 @@ pub fn verify_detached(&Signature(ref sig): &Signature,
 #[cfg(test)]
 mod test {
     use super::*;
+
+    #[test]
+    fn test_keypair_from_privkey() {
+        use randombytes::{randombytes, randombytes_into};
+        for _ in 0..256 {
+            let mut seedbuf = [0; 32];
+            randombytes_into(&mut seedbuf);
+            let seed = Seed(seedbuf);
+            let (pk1, sk1) = keypair_from_seed(&seed);
+            let (pk2, sk2) = keypair_from_privkey(sk1.0.as_ref()).unwrap();
+            assert_eq!(pk1, pk2);
+            assert_eq!(sk1, sk2);
+        }
+    }
 
     #[test]
     fn test_sign_verify() {
